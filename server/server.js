@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const db = require('./config/connection');
 const routes = require('./routes');
+const { ApolloServer } = require('apollo-server-express');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -13,6 +14,22 @@ app.use(express.json());
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '../client/build')));
 }
+
+const startServer = async () => {
+  // create a new Apollo server and pass our schema data
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+    context: authMiddleware
+  });
+  // start Apollo server
+  await server.start();
+  // integrate our Apollo server with the Express application as middleware
+  server.applyMiddleware({ app });
+  // log where we can go to test our GQL API 
+  console.log(`Use GraphQL at http://localhost:${PORT}${server.graphqlPath}`);
+};
+
 
 app.use(routes);
 
